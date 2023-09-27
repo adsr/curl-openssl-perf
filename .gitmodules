@@ -2,13 +2,10 @@
 	path = curl
 	url = https://github.com/curl/curl.git
 [submodule "opensslv1"]
-	path = opensslv1
+	path = opensslv111w
 	url = https://github.com/openssl/openssl.git
 [submodule "opensslv3"]
-	path = opensslv3
-	url = https://github.com/openssl/openssl.git
-[submodule "opensslhead"]
-	path = opensslhead
+	path = opensslv302
 	url = https://github.com/openssl/openssl.git
 [submodule "opensslv313"]
 	path = opensslv313

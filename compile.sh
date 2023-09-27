@@ -4,11 +4,11 @@ set -euo pipefail
 which=${1:-all}
 root=$(pwd)
 
-for openssl in opensslv1 opensslv3 opensslv313 opensslhead; do
+for openssl in opensslv111w opensslv302 opensslv313; do
     if [ "$which" = all ] || [ "$which" = openssl ]; then
         pushd "$openssl"
         git clean -fdx
-        CFLAGS='-g -O0' ./config --prefix="${root}/install-${openssl}" --libdir="${root}/install-${openssl}/lib" --debug enable-ssl-trace
+        CFLAGS='-g -O0' ./config --prefix="${root}/install-${openssl}" --libdir="${root}/install-${openssl}/lib"
         make -j "$(nproc)" && make install
         popd
     fi

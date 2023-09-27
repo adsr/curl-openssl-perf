@@ -1,0 +1,86 @@
+diff --git a/lib/vtls/openssl.c b/lib/vtls/openssl.c
+index 3388e8b97..be8aaaabc 100644
+--- a/lib/vtls/openssl.c
++++ b/lib/vtls/openssl.c
+@@ -291,6 +291,8 @@ typedef unsigned long sslerr_t;
+ #define USE_PRE_1_1_API (OPENSSL_VERSION_NUMBER < 0x10100000L)
+ #endif /* !LIBRESSL_VERSION_NUMBER */
+ 
++static SSL_CTX *ctx_global = NULL;
++
+ struct ossl_ssl_backend_data {
+   /* these ones requires specific SSL-types */
+   SSL_CTX* ctx;
+@@ -1742,6 +1744,11 @@ static int ossl_init(void)
+ /* Global cleanup */
+ static void ossl_cleanup(void)
+ {
++  if(ctx_global) {
++    SSL_CTX_free(ctx_global);
++    ctx_global = NULL;
++  }
++
+ #if (OPENSSL_VERSION_NUMBER >= 0x10100000L) &&  \
+   !defined(LIBRESSL_VERSION_NUMBER)
+   /* OpenSSL 1.1 deprecates all these cleanup functions and
+@@ -1892,7 +1899,9 @@ static void ossl_close(struct Curl_cfilter *cf, struct Curl_easy *data)
+     backend->handle = NULL;
+   }
+   if(backend->ctx) {
+-    SSL_CTX_free(backend->ctx);
++    if(backend->ctx != ctx_global) {
++      SSL_CTX_free(backend->ctx);
++    }
+     backend->ctx = NULL;
+     backend->x509_store_setup = FALSE;
+   }
+@@ -3405,6 +3414,22 @@ CURLcode Curl_ssl_setup_x509_store(struct Curl_cfilter *cf,
+ }
+ #endif /* HAVE_SSL_X509_STORE_SHARE */
+ 
++static CURLcode ossl_new_ssl_ctx(struct Curl_easy *data,
++                                 SSL_METHOD_QUAL SSL_METHOD *req_method,
++                                 SSL_CTX **ctx)
++{
++  char error_buffer[256];
++
++  *ctx = SSL_CTX_new(req_method);
++  if(!*ctx) {
++    failf(data, "SSL: couldn't create a context: %s",
++          ossl_strerror(ERR_peek_error(), error_buffer, sizeof(error_buffer)));
++    return CURLE_OUT_OF_MEMORY;
++  }
++
++  return CURLE_OK;
++}
++
+ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
+                                    struct Curl_easy *data)
+ {
+@@ -3481,14 +3506,21 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
+      * from the previous call. */
+     ossl_close(cf, data);
+   }
+-  backend->ctx = SSL_CTX_new(req_method);
+ 
+-  if(!backend->ctx) {
+-    failf(data, "SSL: couldn't create a context: %s",
+-          ossl_strerror(ERR_peek_error(), error_buffer, sizeof(error_buffer)));
+-    return CURLE_OUT_OF_MEMORY;
++  if (1) { // TODO if(use_ctx_global)
++    if(!ctx_global) {
++      result = ossl_new_ssl_ctx(data, req_method, &ctx_global);
++    } else {
++      result = CURLE_OK;
++    }
++    backend->ctx = ctx_global;
++  } else {
++    result = ossl_new_ssl_ctx(data, req_method, &backend->ctx);
+   }
+ 
++  if(result != CURLE_OK)
++    return result;
++
+ #ifdef SSL_MODE_RELEASE_BUFFERS
+   SSL_CTX_set_mode(backend->ctx, SSL_MODE_RELEASE_BUFFERS);
+ #endif
