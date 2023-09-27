@@ -4,7 +4,7 @@ set -euo pipefail
 which=${1:-all}
 root=$(pwd)
 
-for openssl in opensslv1 opensslv3 opensslhead; do
+for openssl in opensslv1 opensslv3 opensslv313 opensslhead; do
     if [ "$which" = all ] || [ "$which" = openssl ]; then
         pushd "$openssl"
         git clean -fdx
