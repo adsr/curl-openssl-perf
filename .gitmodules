@@ -7,3 +7,9 @@
 [submodule "opensslv3"]
 	path = opensslv3
 	url = https://github.com/openssl/openssl.git
+[submodule "opensslhead"]
+	path = opensslhead
+	url = https://github.com/openssl/openssl.git
+[submodule "opensslv313"]
+	path = opensslv313
+	url = https://github.com/openssl/openssl.git
