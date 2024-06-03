@@ -18,7 +18,13 @@ for openssl in opensslv111w opensslv302 opensslv313 opensslv321; do
     if [ "$which" = all ] || [ "$which" = curl ]; then
         pushd curl
         git clean -fdx
-        autoreconf -fi && PKG_CONFIG_PATH="${root}/install-${openssl}/lib/pkgconfig/" CFLAGS='-g -O0' ./configure --with-openssl --prefix="${root}/install-curl-${openssl}"
+        autoreconf -fi
+        CFLAGS='-g -O0' \
+            PKG_CONFIG_PATH="${root}/install-${openssl}/lib/pkgconfig/" \
+            ./configure \
+            --with-openssl \
+            --disable-threaded-resolver \
+            --prefix="${root}/install-curl-${openssl}"
         make -j "$(nproc)" && make install
         popd
     fi
