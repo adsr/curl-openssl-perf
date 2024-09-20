@@ -15,8 +15,9 @@ int main(int argc, char **argv) {
     int n = argc >= 2 ? atoi(argv[1]) : 1;
     int i;
 
+    CURL *curl = curl_easy_init();
     for (i = 0; i < n; i++) {
-        CURL *curl = curl_easy_init();
+        curl_easy_reset(curl);
         curl_easy_setopt(curl, CURLOPT_URL, "https://localhost:8181/");
         curl_easy_setopt(curl, CURLOPT_CAINFO, "./cert/test.crt");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cb);
@@ -28,9 +29,9 @@ int main(int argc, char **argv) {
         double t_total, t_pretransfer;
         curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &t_total);
         curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &t_pretransfer);
-        curl_easy_cleanup(curl);
         printf("%.7f %.7f\n", t_total, t_pretransfer);
     }
+    curl_easy_cleanup(curl);
 
     curl_global_cleanup();
 
